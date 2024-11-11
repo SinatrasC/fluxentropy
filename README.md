@@ -1,5 +1,3 @@
-Here’s a GitHub-ready README for Fluxentropy:
-
 ---
 
 # Fluxentropy
