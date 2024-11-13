@@ -2,3 +2,9 @@ torch
 numpy
 transformers
 plotly
+pandas 
+numpy 
+matplotlib 
+scikit-learn 
+scipy
+seaborn
