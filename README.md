@@ -1,5 +1,8 @@
 # Fluxentropy
 
+![ce75d326-20db-47c0-af93-655b34408cc4](https://github.com/user-attachments/assets/c212bf62-2a5b-4900-bfd7-7d59a3291b4a)
+
+
 Fluxentropy is an open-source engine designed to enhance curriculum learning for language models. By leveraging entropy as a metric to organize training data, Fluxentropy aims to improve the efficiency and performance of model training. Built with modularity in mind, the project centers around using pretrained language models (like Hugging Face’s SmolLM) to assign entropy-based characteristics to dataset chunks, potentially streamlining convergence and optimizing training. Fluxentropy is a project stemming from the work done by the opensource community and spearheaded by [xjdr](https://x.com/_xjdr) and [doomslide](https://x.com/doomslide) (aka shrek and frog) on [entropix](https://github.com/xjdr-alt/entropix).
 
 ## Features
@@ -31,8 +34,10 @@ Fluxentropy is an open-source engine designed to enhance curriculum learning for
 ## Roadmap
 
 1. **Milestone 1**: ~~Build and validate the `entropy_characterize` function to tag entropy levels and output results to a file.~~
-2. **Milestone 2**: Implement visualization for entropy-based data preparation and assess improvements in training efficiency.
-3. **Milestone 3**: Connect Fluxentropy to a data import pipeline for data scheduling during training.
+3. **Milestone 2**: Implement visualization for entropy-based data preparation and assess improvements in training efficiency.
+   - **Sidequest 1**: ~~Implement statistical analysis to gauge entropy-based ordering across models~~
+   - **Sidequest 2**: Correllate benchmark Q&A performance with assigned entropy.
+5. **Milestone 3**: Connect Fluxentropy to a data import pipeline for data scheduling during training.
 
 ## Contributing
 
