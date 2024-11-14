@@ -1,0 +1,18 @@
+One-way ANOVA Results
+--------------------
+
+F-statistic: 5.9465
+p-value: 1.4763e-02
+
+Descriptive Statistics
+--------------------
+
+Correct Answers:
+Mean entropy: 3.0350
+Standard deviation: 0.6632
+Count: 4529
+
+Incorrect Answers:
+Mean entropy: 3.0674
+Standard deviation: 0.6603
+Count: 5513

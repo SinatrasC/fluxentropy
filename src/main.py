@@ -26,8 +26,8 @@ torch.set_float32_matmul_precision("high")
 if __name__ == "__main__":
     seed = 1337
     torch.manual_seed(seed)
-    # model_id = 'HuggingFaceTB/SmolLM-360M-Instruct'
-    model_id = "meta-llama/Llama-3.2-1B-Instruct"
+    model_id = 'HuggingFaceTB/SmolLM-360M-Instruct'
+    #model_id = "meta-llama/Llama-3.2-1B-Instruct"
 
     print(f"\nLoading model: {model_id}")
     model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16).to(device)
