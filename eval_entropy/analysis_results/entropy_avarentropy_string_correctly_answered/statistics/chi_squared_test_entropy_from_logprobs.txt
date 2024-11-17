@@ -1,0 +1,21 @@
+Chi-Squared Test for entropy_from_logprobs:
+==================================================
+Chi-squared Statistic: 1.1669
+Degrees of Freedom: 3
+P-value: 7.6096e-01
+
+Contingency Table:
+Correctly Answered  False  True 
+binned_metric                   
+(0.167, 5.873]       1122   1143
+(5.873, 6.136]       1152   1112
+(6.136, 6.296]       1120   1144
+(6.296, 6.554]       1135   1130
+
+Expected Frequencies:
+Correctly Answered   False   True 
+binned_metric                     
+(0.167, 5.873]      1132.5  1132.5
+(5.873, 6.136]      1132.0  1132.0
+(6.136, 6.296]      1132.0  1132.0
+(6.296, 6.554]      1132.5  1132.5

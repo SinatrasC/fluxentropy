@@ -1,0 +1,21 @@
+Chi-Squared Test for varentropy_from_logprobs:
+==================================================
+Chi-squared Statistic: 1.7870
+Degrees of Freedom: 3
+P-value: 6.1777e-01
+
+Contingency Table:
+Correctly Answered  False  True 
+binned_metric                   
+(0.278, 1.267]       1140   1125
+(1.267, 1.925]       1113   1151
+(1.925, 2.991]       1154   1110
+(2.991, 12.662]      1122   1143
+
+Expected Frequencies:
+Correctly Answered   False   True 
+binned_metric                     
+(0.278, 1.267]      1132.5  1132.5
+(1.267, 1.925]      1132.0  1132.0
+(1.925, 2.991]      1132.0  1132.0
+(2.991, 12.662]     1132.5  1132.5

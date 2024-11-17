@@ -1,0 +1,7 @@
+Basic statistics for composite_metric:
+Mean: 14.9129
+Median: 13.6490
+Std Dev: 5.2127
+Min: 5.1291
+Max: 51.7564
+

@@ -1,0 +1,3 @@
+ANOVA Test Results for varentropy:
+F-statistic: 7.4885
+p-value: 0.0062

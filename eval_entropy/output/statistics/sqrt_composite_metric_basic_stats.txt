@@ -1,0 +1,7 @@
+Basic statistics for sqrt_composite_metric:
+Mean: 3.8089
+Median: 3.6945
+Std Dev: 0.6367
+Min: 2.2647
+Max: 7.1942
+

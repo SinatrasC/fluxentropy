@@ -1,0 +1,31 @@
+Detailed Logistic Regression Results for Entropy + Composite:
+==================================================
+                           Logit Regression Results                           
+==============================================================================
+Dep. Variable:     Correctly Answered   No. Observations:                10042
+Model:                          Logit   Df Residuals:                    10039
+Method:                           MLE   Df Model:                            2
+Date:                Sun, 17 Nov 2024   Pseudo R-squ.:               0.0004607
+Time:                        15:37:41   Log-Likelihood:                -6909.1
+converged:                       True   LL-Null:                       -6912.3
+Covariance Type:            nonrobust   LLR p-value:                   0.04140
+====================================================================================
+                       coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------------
+const                0.1906      0.268      0.712      0.476      -0.334       0.715
+entropy             -0.2155      0.222     -0.972      0.331      -0.650       0.219
+composite_metric     0.0181      0.028      0.644      0.520      -0.037       0.073
+====================================================================================
+
+Additional Metrics:
+ROC AUC Score: 0.5177
+
+Classification Report:
+              precision    recall  f1-score   support
+
+       False       0.55      1.00      0.71      5513
+        True       0.00      0.00      0.00      4529
+
+    accuracy                           0.55     10042
+   macro avg       0.27      0.50      0.35     10042
+weighted avg       0.30      0.55      0.39     10042

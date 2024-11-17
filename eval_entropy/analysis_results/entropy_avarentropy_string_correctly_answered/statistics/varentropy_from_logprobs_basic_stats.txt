@@ -1,0 +1,7 @@
+Basic statistics for varentropy_from_logprobs:
+Mean: 2.4494
+Median: 1.9246
+Std Dev: 1.7822
+Min: 0.2793
+Max: 12.6621
+

@@ -1,0 +1,3 @@
+ANOVA Test Results for entropy:
+F-statistic: 5.9465
+p-value: 0.0148

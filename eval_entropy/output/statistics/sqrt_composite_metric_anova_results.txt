@@ -1,0 +1,3 @@
+ANOVA Test Results for sqrt_composite_metric:
+F-statistic: 6.3272
+p-value: 0.0119

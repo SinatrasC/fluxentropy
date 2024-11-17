@@ -1,0 +1,30 @@
+Detailed Logistic Regression Results for entropy:
+==================================================
+                           Logit Regression Results                           
+==============================================================================
+Dep. Variable:     Correctly Answered   No. Observations:                10042
+Model:                          Logit   Df Residuals:                    10040
+Method:                           MLE   Df Model:                            1
+Date:                Sun, 17 Nov 2024   Pseudo R-squ.:               0.0004307
+Time:                        15:37:40   Log-Likelihood:                -6909.3
+converged:                       True   LL-Null:                       -6912.3
+Covariance Type:            nonrobust   LLR p-value:                   0.01468
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+const          0.0295      0.095      0.311      0.756      -0.156       0.215
+entropy       -0.0741      0.030     -2.437      0.015      -0.134      -0.015
+==============================================================================
+
+Additional Metrics:
+ROC AUC Score: 0.5178
+
+Classification Report:
+              precision    recall  f1-score   support
+
+       False       0.55      1.00      0.71      5513
+        True       0.00      0.00      0.00      4529
+
+    accuracy                           0.55     10042
+   macro avg       0.27      0.50      0.35     10042
+weighted avg       0.30      0.55      0.39     10042

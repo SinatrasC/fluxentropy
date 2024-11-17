@@ -1,0 +1,7 @@
+Basic statistics for sqrt_varentropy:
+Mean: 2.2621
+Median: 2.2421
+Std Dev: 0.1957
+Min: 1.6766
+Max: 3.1994
+

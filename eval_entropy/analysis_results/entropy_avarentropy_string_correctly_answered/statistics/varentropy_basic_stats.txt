@@ -1,0 +1,7 @@
+Basic statistics for varentropy:
+Mean: 9.8309
+Median: 8.6250
+Std Dev: 4.0593
+Min: 0.1592
+Max: 25.8750
+

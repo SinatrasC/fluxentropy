@@ -1,0 +1,3 @@
+ANOVA Test Results for composite_metric:
+F-statistic: 5.4130
+p-value: 0.0200

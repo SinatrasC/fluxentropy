@@ -1,0 +1,7 @@
+Basic statistics for entropy:
+Mean: 8.3338
+Median: 8.8125
+Std Dev: 1.3304
+Min: 0.0116
+Max: 9.6875
+

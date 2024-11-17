@@ -1,0 +1,7 @@
+Basic statistics for entropy_from_logprobs:
+Mean: 5.9887
+Median: 6.1361
+Std Dev: 0.5190
+Min: 0.1683
+Max: 6.5541
+

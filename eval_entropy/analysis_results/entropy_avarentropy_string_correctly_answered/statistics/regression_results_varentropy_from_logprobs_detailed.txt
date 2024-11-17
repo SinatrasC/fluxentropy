@@ -1,0 +1,30 @@
+Detailed Logistic Regression Results for varentropy_from_logprobs:
+==================================================
+                           Logit Regression Results                           
+==============================================================================
+Dep. Variable:     Correctly Answered   No. Observations:                 9058
+Model:                          Logit   Df Residuals:                     9056
+Method:                           MLE   Df Model:                            1
+Date:                Sun, 17 Nov 2024   Pseudo R-squ.:               5.396e-06
+Time:                        16:44:53   Log-Likelihood:                -6278.5
+converged:                       True   LL-Null:                       -6278.5
+Covariance Type:            nonrobust   LLR p-value:                    0.7946
+============================================================================================
+                               coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------------------
+const                        0.0075      0.036      0.210      0.833      -0.062       0.078
+varentropy_from_logprobs    -0.0031      0.012     -0.260      0.795      -0.026       0.020
+============================================================================================
+
+Additional Metrics:
+ROC AUC Score: 0.4999
+
+Classification Report:
+              precision    recall  f1-score   support
+
+       False       0.50      0.35      0.42      4529
+        True       0.50      0.65      0.56      4529
+
+    accuracy                           0.50      9058
+   macro avg       0.50      0.50      0.49      9058
+weighted avg       0.50      0.50      0.49      9058

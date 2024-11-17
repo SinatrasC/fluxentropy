@@ -1,0 +1,30 @@
+Detailed Logistic Regression Results for sqrt_composite_metric:
+==================================================
+                           Logit Regression Results                           
+==============================================================================
+Dep. Variable:     Correctly Answered   No. Observations:                10042
+Model:                          Logit   Df Residuals:                    10040
+Method:                           MLE   Df Model:                            1
+Date:                Sun, 17 Nov 2024   Pseudo R-squ.:               0.0004583
+Time:                        15:37:41   Log-Likelihood:                -6909.1
+converged:                       True   LL-Null:                       -6912.3
+Covariance Type:            nonrobust   LLR p-value:                   0.01183
+=========================================================================================
+                            coef    std err          z      P>|z|      [0.025      0.975]
+-----------------------------------------------------------------------------------------
+const                     0.1058      0.122      0.868      0.385      -0.133       0.345
+sqrt_composite_metric    -0.0794      0.032     -2.514      0.012      -0.141      -0.018
+=========================================================================================
+
+Additional Metrics:
+ROC AUC Score: 0.5175
+
+Classification Report:
+              precision    recall  f1-score   support
+
+       False       0.55      1.00      0.71      5513
+        True       0.00      0.00      0.00      4529
+
+    accuracy                           0.55     10042
+   macro avg       0.27      0.50      0.35     10042
+weighted avg       0.30      0.55      0.39     10042

@@ -1,258 +1,325 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import statsmodels.api as sm
 from scipy import stats
+import matplotlib.pyplot as plt
 import os
+import seaborn as sns
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+from scipy import stats
+from sklearn.metrics import roc_auc_score
+import statsmodels.api as sm
+import argparse
+import ast
+import math
+from scipy.stats import chi2_contingency
 
-def main():
-    # ------------------------------
-    # Configuration
-    # ------------------------------
+def parse_logprobs(logprobs_str):
+    """Parse the logprobs string and return list of probabilities."""
+    try:
+        # Convert string representation to list of dictionaries
+        logprobs_list = ast.literal_eval(logprobs_str)
+        
+        # Extract logprobs and convert to probabilities
+        probabilities = [2**float(item['logprob']) for item in logprobs_list]
+        
+        # Normalize probabilities to sum to 1
+        total = sum(probabilities)
+        normalized_probs = [p/total for p in probabilities]
+        
+        return normalized_probs
+    except:
+        return None
+
+def calculate_entropy_metrics(probabilities):
+    """Calculate entropy and varentropy from probabilities."""
+    if not probabilities:
+        return None, None
     
-    # Path to the data file
-    data_file = 'entropy_text_correctly_answered.csv'
+    # Calculate entropy: -Σ p_i * log2(p_i)
+    entropy = -sum(p * math.log2(p) for p in probabilities if p > 0)
     
-    # Directory to save the plots and statistics
-    plots_dir = os.path.join('output', 'plots')
-    stats_dir = os.path.join('output', 'statistics')
+    # Calculate varentropy: Σ p_i * (log2(p_i))^2 - (Σ p_i * log2(p_i))^2
+    log_probs = [math.log2(p) for p in probabilities if p > 0]
+    expected_log = sum(-p * lp for p, lp in zip(probabilities, log_probs))
+    expected_square_log = sum(p * lp * lp for p, lp in zip(probabilities, log_probs))
+    varentropy = expected_square_log - expected_log * expected_log
     
-    # Ensure the output directories exist
+    return entropy, varentropy
+
+def plot_contingency_table(contingency_table, metric, plots_dir):
+    """Create a heatmap visualization of the contingency table."""
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(contingency_table, annot=True, fmt='d', cmap='YlOrRd')
+    plt.title(f'Contingency Table for {metric}')
+    plt.xlabel('Correctly Answered')
+    plt.ylabel('Metric Bins')
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, f'{metric}_contingency_table.png'))
+    plt.close()
+
+def perform_chi_squared_test(df, metric, stats_dir, plots_dir):
+    """Perform chi-squared test of independence between metric and correctness."""
+    # Discretize the metric into bins
+    try:
+        df['binned_metric'] = pd.qcut(df[metric], q=4, duplicates='drop')
+    except ValueError:
+        df['binned_metric'] = pd.cut(df[metric], bins=4)
+    
+    # Create contingency table
+    contingency_table = pd.crosstab(df['binned_metric'], df['Correctly Answered'])
+    
+    # Perform chi-squared test
+    chi2, p, dof, expected = chi2_contingency(contingency_table)
+    
+    # Save results
+    chi_squared_file = os.path.join(stats_dir, f'chi_squared_test_{metric}.txt')
+    with open(chi_squared_file, 'w') as f:
+        f.write(f"Chi-Squared Test for {metric}:\n")
+        f.write("="*50 + "\n")
+        f.write(f"Chi-squared Statistic: {chi2:.4f}\n")
+        f.write(f"Degrees of Freedom: {dof}\n")
+        f.write(f"P-value: {p:.4e}\n\n")
+        f.write("Contingency Table:\n")
+        f.write(f"{contingency_table}\n\n")
+        f.write("Expected Frequencies:\n")
+        expected_df = pd.DataFrame(expected, index=contingency_table.index, columns=contingency_table.columns)
+        f.write(f"{expected_df}\n")
+    
+    # Plot the contingency table
+    plot_contingency_table(contingency_table, metric, plots_dir)
+    
+    print(f"Chi-squared test for {metric} completed. Results saved to {chi_squared_file}")
+
+def analyze_data(csv_file, output_dir, univariate_metrics=None, multivariate_pairs=None, 
+                include_sqrt_varentropy=False, balance_classes=True):
+    # Get base filename without extension for the output directory
+    base_filename = os.path.splitext(os.path.basename(csv_file))[0]
+    
+    # Create specific output directory for this CSV
+    csv_output_dir = os.path.join(output_dir, base_filename)
+    plots_dir = os.path.join(csv_output_dir, 'plots')
+    stats_dir = os.path.join(csv_output_dir, 'statistics')
+    
+    # Create all necessary directories
     os.makedirs(plots_dir, exist_ok=True)
     os.makedirs(stats_dir, exist_ok=True)
     
-    # ------------------------------
-    # 1. Load and Inspect the Data
-    # ------------------------------
+    print(f"Saving results to: {csv_output_dir}")
+
+    # Read the data
+    df = pd.read_csv(csv_file)
     
-    # Load the data
-    try:
-        df = pd.read_csv(data_file)
-        print("Data loaded successfully.")
-    except FileNotFoundError:
-        print(f"Error: The file '{data_file}' was not found.")
-        return
-    except Exception as e:
-        print(f"An error occurred while reading '{data_file}': {e}")
-        return
+    # Check if we have last_token_predictions and calculate entropy/varentropy
+    if 'last_token_predictions' in df.columns:
+        print("Found last_token_predictions, calculating entropy and varentropy from logprobs...")
+        
+        # Calculate entropy and varentropy from logprobs
+        entropy_varentropy = [
+            calculate_entropy_metrics(parse_logprobs(pred)) 
+            for pred in df['last_token_predictions']
+        ]
+        
+        # Add calculated metrics to dataframe
+        df['entropy_from_logprobs'] = [ev[0] if ev else None for ev in entropy_varentropy]
+        df['varentropy_from_logprobs'] = [ev[1] if ev else None for ev in entropy_varentropy]
+        
+        # Remove rows where calculation failed
+        df = df.dropna(subset=['entropy_from_logprobs', 'varentropy_from_logprobs'])
+        print(f"Calculated entropy and varentropy for {len(df)} samples")
+        
+        # Add these metrics to univariate_metrics if not specified
+        if univariate_metrics is None:
+            univariate_metrics = ['entropy_from_logprobs', 'varentropy_from_logprobs']
+        else:
+            univariate_metrics.extend(['entropy_from_logprobs', 'varentropy_from_logprobs'])
     
-    print("\nFirst few rows of the data:")
-    print(df.head())
+    # Drop rows where 'Correctly Answered' is NaN
+    df = df.dropna(subset=['Correctly Answered'])
     
-    # ------------------------------
-    # 2. Data Preprocessing
-    # ------------------------------
-    
-    # Convert 'Correctly Answered' to boolean (1 for True, 0 for False)
-    df['Correctly Answered'] = df['Correctly Answered'].astype(str).str.strip().str.lower()
-    df['Correctly Answered'] = df['Correctly Answered'].map({'true': 1, 'false': 0})
-    
-    # Drop rows with missing values in 'Correctly Answered' or 'entropy'
-    initial_row_count = len(df)
-    df = df.dropna(subset=['Correctly Answered', 'entropy'])
-    final_row_count = len(df)
-    print(f"\nDropped {initial_row_count - final_row_count} rows due to missing values.")
-    
-    # Convert 'entropy' to numeric
-    df['entropy'] = pd.to_numeric(df['entropy'], errors='coerce')
-    
-    # Drop rows with NaN entropy after conversion
-    df = df.dropna(subset=['entropy'])
-    
-    # ------------------------------
-    # 3. Perform Logistic Regression
-    # ------------------------------
-    
-    # Define the dependent and independent variables
-    X = df['entropy']
-    y = df['Correctly Answered']
-    
-    # Add a constant term for the intercept
-    X_const = sm.add_constant(X)
-    
-    # Fit the logistic regression model
-    try:
-        model = sm.Logit(y, X_const)
-        result = model.fit(disp=False)  # disp=False suppresses the fitting output
-        print("\nLogistic Regression Model fitted successfully.")
-    except Exception as e:
-        print(f"An error occurred during logistic regression fitting: {e}")
-        return
-    
-    # Print the summary of the model
-    print("\nLogistic Regression Results:")
-    print(result.summary())
-    
-    # ------------------------------
-    # 4. Plotting
-    # ------------------------------
-    
-    # 4.1. Scatter Plot with Logistic Regression Curve
-    plt.figure(figsize=(10, 6))
-    
-    # Scatter plot of the raw data
-    sns.scatterplot(x='entropy', y='Correctly Answered', data=df, alpha=0.5, label='Data Points')
-    
-    # Sort the entropy values for plotting the regression curve
-    X_sorted = np.sort(X)
-    X_const_sorted = sm.add_constant(X_sorted)
-    
-    # Predict probabilities using the logistic regression model
-    y_pred = result.predict(X_const_sorted)
-    
-    # Plot the regression curve
-    plt.plot(X_sorted, y_pred, color='red', linewidth=2, label='Logistic Regression')
-    
-    # Labels and title
-    plt.xlabel('Entropy')
-    plt.ylabel('Probability of Correct Answer')
-    plt.title('Entropy vs. Probability of Correct Answer')
-    plt.legend()
-    plt.grid(True)
-    
-    # Save the plot
-    scatter_reg_plot_path = os.path.join(plots_dir, 'entropy_vs_correctness.png')
-    plt.savefig(scatter_reg_plot_path, dpi=300, bbox_inches='tight')
-    print(f"\nScatter plot with regression curve saved as '{scatter_reg_plot_path}'.")
-    
-    # Optional: Display the plot
-    plt.show()
-    
-    # 4.2. Histogram of Entropy for Correct and Incorrect Answers
-    plt.figure(figsize=(10, 6))
-    
-    # Correct answers
-    sns.histplot(df[df['Correctly Answered'] == 1]['entropy'], 
-                 color='green', 
-                 label='Correct', 
-                 kde=True, 
-                 stat='density', 
-                 bins=30, 
-                 alpha=0.6)
-    
-    # Incorrect answers
-    sns.histplot(df[df['Correctly Answered'] == 0]['entropy'], 
-                 color='red', 
-                 label='Incorrect', 
-                 kde=True, 
-                 stat='density', 
-                 bins=30, 
-                 alpha=0.6)
-    
-    # Labels and title
-    plt.xlabel('Entropy')
-    plt.ylabel('Density')
-    plt.title('Distribution of Entropy for Correct and Incorrect Answers')
-    plt.legend()
-    plt.grid(True)
-    
-    # Save the plot
-    entropy_dist_plot_path = os.path.join(plots_dir, 'entropy_distribution.png')
-    plt.savefig(entropy_dist_plot_path, dpi=300, bbox_inches='tight')
-    print(f"Entropy distribution histogram saved as '{entropy_dist_plot_path}'.")
-    
-    # Optional: Display the plot
-    plt.show()
-    
-    # 4.3. Additional Plot: Bar Chart of Frequency of Correct Responses
-    plt.figure(figsize=(8, 6))
-    
-    # Frequency counts
-    frequency = df['Correctly Answered'].value_counts().sort_index()
-    sns.barplot(x=frequency.index.map({0: 'Incorrect', 1: 'Correct'}), y=frequency.values, palette=['red', 'green'])
-    
-    # Labels and title
-    plt.xlabel('Response Correctness')
-    plt.ylabel('Frequency')
-    plt.title('Frequency of Correct and Incorrect Responses')
-    plt.grid(axis='y')
-    
-    # Save the plot
-    frequency_plot_path = os.path.join(plots_dir, 'response_frequency.png')
-    plt.savefig(frequency_plot_path, dpi=300, bbox_inches='tight')
-    print(f"Response frequency bar chart saved as '{frequency_plot_path}'.")
-    
-    # Optional: Display the plot
-    plt.show()
-    
-    # ------------------------------
-    # 5. Statistical Analyses
-    # ------------------------------
-    
-    # 5.1. Frequency and Percentage of Correct Responses
-    frequency = df['Correctly Answered'].value_counts().sort_index()
-    percentage = df['Correctly Answered'].value_counts(normalize=True).sort_index() * 100
-    
-    print("\nFrequency of Correct Responses:")
-    print(frequency.rename({0: 'Incorrect', 1: 'Correct'}))
-    
-    print("\nPercentage of Correct Responses:")
-    print(percentage.rename({0: 'Incorrect', 1: 'Correct'}).round(2))
-    
-    # 5.2. Distribution of Entropy for Correct and Incorrect Answers
-    # (Already visualized in the histogram above)
-    
-    # 5.3. One-way ANOVA Test
-    # Separate entropy values for correct and incorrect answers
-    entropy_correct = df[df['Correctly Answered'] == 1]['entropy']
-    entropy_incorrect = df[df['Correctly Answered'] == 0]['entropy']
-    
-    # Perform one-way ANOVA
-    f_statistic, p_value = stats.f_oneway(entropy_correct, entropy_incorrect)
-    
-    print("\nOne-way ANOVA Results:")
-    print(f"F-statistic: {f_statistic:.4f}")
-    print(f"p-value: {p_value:.4e}")
-    
-    # Add descriptive statistics
-    print("\nDescriptive Statistics:")
-    print("\nCorrect Answers:")
-    print(f"Mean entropy: {entropy_correct.mean():.4f}")
-    print(f"Standard deviation: {entropy_correct.std():.4f}")
-    print(f"Count: {len(entropy_correct)}")
-    
-    print("\nIncorrect Answers:")
-    print(f"Mean entropy: {entropy_incorrect.mean():.4f}")
-    print(f"Standard deviation: {entropy_incorrect.std():.4f}")
-    print(f"Count: {len(entropy_incorrect)}")
-    
-    # Save ANOVA results to a file
-    anova_path = os.path.join(stats_dir, 'anova_results.txt')
-    with open(anova_path, 'w') as f:
-        f.write("One-way ANOVA Results\n")
-        f.write("-" * 20 + "\n\n")
-        f.write(f"F-statistic: {f_statistic:.4f}\n")
-        f.write(f"p-value: {p_value:.4e}\n\n")
-        f.write("Descriptive Statistics\n")
-        f.write("-" * 20 + "\n\n")
-        f.write("Correct Answers:\n")
-        f.write(f"Mean entropy: {entropy_correct.mean():.4f}\n")
-        f.write(f"Standard deviation: {entropy_correct.std():.4f}\n")
-        f.write(f"Count: {len(entropy_correct)}\n\n")
-        f.write("Incorrect Answers:\n")
-        f.write(f"Mean entropy: {entropy_incorrect.mean():.4f}\n")
-        f.write(f"Standard deviation: {entropy_incorrect.std():.4f}\n")
-        f.write(f"Count: {len(entropy_incorrect)}\n")
-    
-    print(f"\nANOVA results saved to '{anova_path}'.")
-    
-    # Optionally, save the statistical summaries to text files
-    frequency_path = os.path.join(stats_dir, 'frequency_of_correct_responses.txt')
-    percentage_path = os.path.join(stats_dir, 'percentage_of_correct_responses.txt')
-    
-    frequency.rename({0: 'Incorrect', 1: 'Correct'}).to_csv(frequency_path, sep='\t')
-    percentage.rename({0: 'Incorrect', 1: 'Correct'}).round(2).to_csv(percentage_path, sep='\t')
-    
-    print(f"\nFrequency data saved to '{frequency_path}'.")
-    print(f"Percentage data saved to '{percentage_path}'.")
-    
-    # ------------------------------
-    # 6. Conclusion
-    # ------------------------------
-    
-    print("\nAll plots have been saved successfully in the 'output/plots' directory.")
-    print("Statistical summaries have been saved in the 'output/statistics' directory.")
+    # Convert 'Correctly Answered' to boolean
+    df['Correctly Answered'] = df['Correctly Answered'].astype(bool)
+
+    # Balance classes if requested
+    if balance_classes:
+        correct_samples = df[df['Correctly Answered']]
+        incorrect_samples = df[~df['Correctly Answered']]
+        
+        # Get the size of the smaller class
+        min_samples = min(len(correct_samples), len(incorrect_samples))
+        
+        # Randomly sample from both classes to get balanced dataset
+        correct_samples = correct_samples.sample(n=min_samples, random_state=42)
+        incorrect_samples = incorrect_samples.sample(n=min_samples, random_state=42)
+        
+        # Combine the balanced samples
+        df = pd.concat([correct_samples, incorrect_samples])
+        
+        print(f"Balanced dataset: {min_samples} samples per class "
+              f"(total {len(df)} samples)")
+
+    # Add sqrt_varentropy if requested and varentropy exists
+    if include_sqrt_varentropy and 'varentropy' in df.columns:
+        df['sqrt_varentropy'] = np.sqrt(df['varentropy'])
+        print("Added sqrt_varentropy metric")
+
+    # Validate requested metrics exist in the dataframe
+    available_metrics = [col for col in df.columns if col != 'Correctly Answered']
+    print(f"Available metrics in dataset: {available_metrics}")
+
+    if univariate_metrics:
+        missing_metrics = [m for m in univariate_metrics if m not in df.columns]
+        if missing_metrics:
+            raise ValueError(f"Requested metrics not found in dataset: {missing_metrics}")
+    else:
+        univariate_metrics = available_metrics
+
+    # Basic univariate analysis for each metric
+    for metric in univariate_metrics:
+        print(f"Analyzing metric: {metric}")
+        
+        # Basic statistics
+        stats_file = os.path.join(stats_dir, f'{metric}_basic_stats.txt')
+        with open(stats_file, 'w') as f:
+            f.write(f"Basic statistics for {metric}:\n")
+            f.write(f"Mean: {df[metric].mean():.4f}\n")
+            f.write(f"Median: {df[metric].median():.4f}\n")
+            f.write(f"Std Dev: {df[metric].std():.4f}\n")
+            f.write(f"Min: {df[metric].min():.4f}\n")
+            f.write(f"Max: {df[metric].max():.4f}\n\n")
+
+        # Distribution plots
+        plt.figure(figsize=(12, 6))
+        sns.histplot(data=df[df['Correctly Answered']], x=metric, bins=50, 
+                    alpha=0.5, color='green', label='Correct')
+        sns.histplot(data=df[~df['Correctly Answered']], x=metric, bins=50, 
+                    alpha=0.5, color='red', label='Incorrect')
+        plt.title(f'Distribution of {metric} by Correctness')
+        plt.xlabel(metric)
+        plt.ylabel('Count')
+        plt.legend()
+        plt.savefig(os.path.join(plots_dir, f'{metric}_distribution_by_correctness.png'))
+        plt.close()
+
+        # Perform chi-squared test
+        perform_chi_squared_test(df, metric, stats_dir, plots_dir)
+
+        # Univariate logistic regression
+        X = df[[metric]]
+        X = sm.add_constant(X)
+        y = df['Correctly Answered']
+        
+        model = sm.Logit(y, X)
+        results = model.fit()
+        
+        # Sklearn model for predictions
+        sk_model = LogisticRegression()
+        sk_model.fit(df[[metric]], y)
+        y_pred = sk_model.predict(df[[metric]])
+        y_pred_proba = sk_model.predict_proba(df[[metric]])[:, 1]
+        
+        with open(os.path.join(stats_dir, f'regression_results_{metric}_detailed.txt'), 'w') as f:
+            f.write(f"Detailed Logistic Regression Results for {metric}:\n")
+            f.write("="*50 + "\n")
+            f.write(results.summary().as_text())
+            f.write("\n\nAdditional Metrics:\n")
+            f.write(f"ROC AUC Score: {roc_auc_score(y, y_pred_proba):.4f}\n")
+            f.write("\nClassification Report:\n")
+            f.write(classification_report(y, y_pred))
+
+    # Multivariate analysis
+    if multivariate_pairs:
+        for metric_pair in multivariate_pairs:
+            if not all(metric in df.columns for metric in metric_pair):
+                print(f"Skipping pair {metric_pair} - not all metrics available")
+                continue
+                
+            print(f"Analyzing metric pair: {metric_pair}")
+            
+            X_combined = df[list(metric_pair)]
+            X_combined = sm.add_constant(X_combined)
+            model_combined = sm.Logit(y, X_combined)
+            results_combined = model_combined.fit()
+            
+            sk_model_combined = LogisticRegression()
+            sk_model_combined.fit(df[list(metric_pair)], y)
+            y_pred_combined = sk_model_combined.predict(df[list(metric_pair)])
+            y_pred_proba_combined = sk_model_combined.predict_proba(df[list(metric_pair)])[:, 1]
+            
+            pair_name = '_'.join(metric_pair)
+            with open(os.path.join(stats_dir, f'regression_results_{pair_name}_detailed.txt'), 'w') as f:
+                f.write(f"Detailed Logistic Regression Results for {pair_name}:\n")
+                f.write("="*50 + "\n")
+                f.write(results_combined.summary().as_text())
+                f.write("\n\nAdditional Metrics:\n")
+                f.write(f"ROC AUC Score: {roc_auc_score(y, y_pred_proba_combined):.4f}\n")
+                f.write("\nClassification Report:\n")
+                f.write(classification_report(y, y_pred_combined))
+
+    # Create correlation matrix plot for all analyzed metrics
+    analyzed_metrics = list(set(univariate_metrics + [m for pair in (multivariate_pairs or []) for m in pair]))
+    if len(analyzed_metrics) > 1:
+        plt.figure(figsize=(12, 10))
+        correlation_matrix = df[analyzed_metrics + ['Correctly Answered']].corr()
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+        plt.title('Correlation Matrix')
+        plt.tight_layout()
+        plt.savefig(os.path.join(plots_dir, 'correlation_matrix.png'))
+        plt.close()
+
+def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Analyze entropy data from CSV files')
+    parser.add_argument('--input-csv', help='CSV file to process')
+    parser.add_argument('--output-dir', default='output', help='Output directory for analysis results')
+    parser.add_argument('--univariate-metrics', nargs='+', help='Metrics to analyze individually')
+    parser.add_argument('--multivariate-pairs', nargs='+', action='append', 
+                       help='Pairs of metrics to analyze together. Use multiple times for multiple pairs.')
+    parser.add_argument('--include-sqrt-varentropy', action='store_true',
+                       help='Calculate and include sqrt_varentropy metric')
+    parser.add_argument('--no-balance-classes', action='store_true',
+                       help='Disable automatic class balancing')
+    args = parser.parse_args()
+
+    # Process the input file
+    if args.input_csv:
+        if os.path.exists(args.input_csv):
+            print(f"Processing {args.input_csv}...")
+            
+            # Convert multivariate pairs from flat list to tuple pairs
+            multivariate_pairs = None
+            if args.multivariate_pairs:
+                multivariate_pairs = []
+                for pair in args.multivariate_pairs:
+                    if len(pair) >= 2:
+                        for i in range(0, len(pair), 2):
+                            if i + 1 < len(pair):
+                                multivariate_pairs.append((pair[i], pair[i+1]))
+            
+            analyze_data(
+                args.input_csv, 
+                args.output_dir,
+                univariate_metrics=args.univariate_metrics,
+                multivariate_pairs=multivariate_pairs,
+                include_sqrt_varentropy=args.include_sqrt_varentropy,
+                balance_classes=not args.no_balance_classes
+            )
+            print(f"Analysis complete for {args.input_csv}")
+        else:
+            print(f"Error: File {args.input_csv} not found")
+    else:
+        # Default behavior if no input CSV specified
+        default_files = [
+            'entropy_text_correctly_answered.csv',
+            'entropy_varentropy_text_correctly_answered.csv'
+        ]
+        for file in default_files:
+            if os.path.exists(file):
+                print(f"Processing {file}...")
+                analyze_data(file, args.output_dir)
+                print(f"Analysis complete for {file}")
 
 if __name__ == "__main__":
     main()
+
+

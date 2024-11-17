@@ -1,0 +1,21 @@
+Chi-Squared Test for entropy:
+==================================================
+Chi-squared Statistic: 1.4518
+Degrees of Freedom: 3
+P-value: 6.9343e-01
+
+Contingency Table:
+Correctly Answered             False  True 
+binned_metric                              
+(0.010599999999999998, 8.125]   1186   1185
+(8.125, 8.812]                  1225   1191
+(8.812, 9.125]                  1106   1097
+(9.125, 9.688]                  1012   1056
+
+Expected Frequencies:
+Correctly Answered              False   True 
+binned_metric                                
+(0.010599999999999998, 8.125]  1185.5  1185.5
+(8.125, 8.812]                 1208.0  1208.0
+(8.812, 9.125]                 1101.5  1101.5
+(9.125, 9.688]                 1034.0  1034.0

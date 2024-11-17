@@ -1,0 +1,31 @@
+Detailed Logistic Regression Results for Entropy + Sqrt(Varentropy):
+==================================================
+                           Logit Regression Results                           
+==============================================================================
+Dep. Variable:     Correctly Answered   No. Observations:                10042
+Model:                          Logit   Df Residuals:                    10039
+Method:                           MLE   Df Model:                            2
+Date:                Sun, 17 Nov 2024   Pseudo R-squ.:               0.0005653
+Time:                        15:37:41   Log-Likelihood:                -6908.4
+converged:                       True   LL-Null:                       -6912.3
+Covariance Type:            nonrobust   LLR p-value:                   0.02009
+===================================================================================
+                      coef    std err          z      P>|z|      [0.025      0.975]
+-----------------------------------------------------------------------------------
+const               0.4033      0.290      1.390      0.164      -0.165       0.972
+entropy            -0.0142      0.053     -0.266      0.791      -0.119       0.090
+sqrt_varentropy    -0.2462      0.180     -1.364      0.173      -0.600       0.108
+===================================================================================
+
+Additional Metrics:
+ROC AUC Score: 0.5172
+
+Classification Report:
+              precision    recall  f1-score   support
+
+       False       0.55      1.00      0.71      5513
+        True       0.00      0.00      0.00      4529
+
+    accuracy                           0.55     10042
+   macro avg       0.27      0.50      0.35     10042
+weighted avg       0.30      0.55      0.39     10042

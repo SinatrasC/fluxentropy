@@ -1,0 +1,13 @@
+Logistic Regression Results for entropy:
+Coefficient: -0.0743
+Intercept: 0.0300
+
+Classification Report:
+              precision    recall  f1-score   support
+
+       False       0.55      1.00      0.71      5513
+        True       0.00      0.00      0.00      4529
+
+    accuracy                           0.55     10042
+   macro avg       0.27      0.50      0.35     10042
+weighted avg       0.30      0.55      0.39     10042

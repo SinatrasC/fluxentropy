@@ -1,0 +1,21 @@
+Chi-Squared Test for varentropy:
+==================================================
+Chi-squared Statistic: 10.0434
+Degrees of Freedom: 3
+P-value: 1.8201e-02
+
+Contingency Table:
+Correctly Answered  False  True 
+binned_metric                   
+(0.158, 6.781]       1133   1148
+(6.781, 8.625]       1105   1176
+(8.625, 11.875]      1194   1068
+(11.875, 25.875]     1097   1137
+
+Expected Frequencies:
+Correctly Answered   False   True 
+binned_metric                     
+(0.158, 6.781]      1140.5  1140.5
+(6.781, 8.625]      1140.5  1140.5
+(8.625, 11.875]     1131.0  1131.0
+(11.875, 25.875]    1117.0  1117.0
