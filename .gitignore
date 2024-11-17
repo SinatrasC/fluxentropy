@@ -5,8 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-./eval_entropy/data/per_string_logprobs/entropy_analysis_results_perstring_logprobs.json
-# Distribution / packaging
+eval_entropy\data\per_string_logprobs\entropy_analysis_results_perstring_logprobs.json# Distribution / packaging
 .Python
 build/
 develop-eggs/
