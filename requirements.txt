@@ -9,3 +9,5 @@ scikit-learn
 scipy
 seaborn
 tqdm
+datatrove
+pyarrow
