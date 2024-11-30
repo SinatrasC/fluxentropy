@@ -37,6 +37,7 @@ Fluxentropy is an open-source engine designed to enhance curriculum learning for
 3. **Milestone 2**: Implement visualization for entropy-based data preparation and assess improvements in training efficiency.
    - **Sidequest 1**: ~~Implement statistical analysis to gauge entropy-based ordering across models~~
    - **Sidequest 2**: ~~Correllate benchmark Q&A performance with assigned entropy.~~
+   - **Sidequest 2**: ~~Create llama3 tokenized fineweb10B dataset for sorting.~~
 5. **Milestone 3**: Connect Fluxentropy to a data import pipeline for data scheduling during training.
 
 ## Contributing
